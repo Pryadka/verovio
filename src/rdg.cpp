@@ -6,6 +6,12 @@
 /////////////////////////////////////////////////////////////////////////////
 
 #include "rdg.h"
+#include "functorparams.h"
+#include "page.h"
+#include "pages.h"
+#include "doc.h"
+#include "system.h"
+#include "pb.h"
 
 //----------------------------------------------------------------------------
 
@@ -39,5 +45,20 @@ void Rdg::Reset()
 //----------------------------------------------------------------------------
 // functor methods
 //----------------------------------------------------------------------------
+
+int Rdg::CastOffEncoding(FunctorParams *functorParams)
+{
+    CastOffEncodingParams *params = dynamic_cast<CastOffEncodingParams *>(functorParams);
+    assert(params);
+
+    if (!m_children.empty()) {
+        Pb *pb = dynamic_cast<Pb*>(*m_children.begin());
+        if (pb) {
+            pb->CastOffEncoding(functorParams);
+        }
+    }
+
+    return FUNCTOR_SIBLINGS;
+}
 
 } // namespace vrv

@@ -35,7 +35,7 @@ public:
 private:
     //
 public:
-    //
+    int CastOffEncoding(FunctorParams* functorParams) override;
 private:
 };
 
