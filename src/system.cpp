@@ -772,7 +772,24 @@ int System::CastOffPages(FunctorParams *functorParams)
         currentShift += params->m_pgHead2Height + params->m_pgFoot2Height;
     }
 
-    if ((params->m_currentPage->GetChildCount() > 0) && (this->m_drawingYRel - this->GetHeight() - currentShift < 0)) {
+    // Special case where we use the Relinquish method.
+    // We want to move the system to the currentPage. However, we cannot use DetachChild
+    // from the contentPage because this screws up the iterator. Relinquish gives up
+    // the ownership of the system - the contentPage itself will be deleted afterwards.
+    System *system = dynamic_cast<System *>(params->m_contentPage->Relinquish(this->GetIdx()));
+    assert(system);
+    bool addNewPageFlag = params->m_currentPage->GetChildCount() > 0 && this->m_drawingYRel - this->GetHeight() - currentShift < 0;
+
+    if (params->m_doc->GetOptions()->m_systemDivider.GetValue() == SYSTEMDIVIDER_new_page) {
+        // Check if page has already a system
+        for (Object* currenPageChild : *params->m_currentPage->GetChildren()) {
+            if (dynamic_cast<System*>(currenPageChild)) {
+                addNewPageFlag = true;
+            }
+        }
+    }
+
+    if (addNewPageFlag) {
         params->m_currentPage = new Page();
         // Use VRV_UNSET value as a flag
         params->m_pgHeadHeight = VRV_UNSET;
@@ -781,12 +798,6 @@ int System::CastOffPages(FunctorParams *functorParams)
         params->m_shift = this->m_drawingYRel - params->m_pageHeight;
     }
 
-    // Special case where we use the Relinquish method.
-    // We want to move the system to the currentPage. However, we cannot use DetachChild
-    // from the contentPage because this screws up the iterator. Relinquish gives up
-    // the ownership of the system - the contentPage itself will be deleted afterwards.
-    System *system = dynamic_cast<System *>(params->m_contentPage->Relinquish(this->GetIdx()));
-    assert(system);
     params->m_currentPage->AddChild(system);
 
     return FUNCTOR_SIBLINGS;
